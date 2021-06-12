@@ -1,20 +1,30 @@
 import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
+import jsons as json
 from numpy.core.fromnumeric import shape
 from os import listdir
 
-'''
-imagem = cv.imread("images\cube.jpg")
-gray = cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)
-gray = cv.cvtColor(gray,cv.COLOR_GRAY2RGB)
+class Imagem:
+    def __init__(self, nome, valor):
+        self.nome = nome
+        self.valor = valor
 
-imagem = np.concatenate((imagem, gray), axis=1)
-#cv.imshow("imagem",imagem)
-plt.imshow(cv.cvtColor(imagem, cv.COLOR_BGR2RGB))
-plt.show()
-cv.waitKey(0)
-'''
+    def __str__(self):
+        return f"({self.nome}, {self.valor})"
+
+class GrupoImagens:
+    def __init__(self):
+        self.imagens = []
+        
+    def adicionar(self, im):
+        self.imagens.append(im)
+
+    def __str__(self):
+        text = ""
+        for im in self.imagens:
+            text += f"({im.nome}, {im.valor})\n"
+        return text
 
 def Converter(listaDiretorios):
     i = 0
@@ -33,12 +43,17 @@ def Converter(listaDiretorios):
 
 
     return imSaida
-        
 
+def getGrayMeanValues(listaDiretorios):
+    valores = GrupoImagens()
+    for dir, file in zip(listaDiretorios, listaDiretorios):
+        imagem = cv.imread("images\\" + file)
+        valorBruto = cv.mean(cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)[0])
+        valores.adicionar(Imagem(dir,valorBruto[0]))
 
-
+    return valores
 
 listaDir = listdir('images')
-imagens = Converter(listaDir)
-plt.imshow(cv.cvtColor(imagens, cv.COLOR_BGR2RGB))
-plt.show()
+valores = getGrayMeanValues(listaDir)
+txtJson = json.dumps(valores)
+print(txtJson)
