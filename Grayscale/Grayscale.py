@@ -79,7 +79,7 @@ def getNearestImage(valor, listaJson):
 
     return cv.imread(listaJson[meio]['nome'])
 
-def photomosaic(imagem, listaJson, Rx, Ry):
+def photomosaic(imagem, listaJson, Rx, Ry, resolução=1):
     formato = shape(imagem)
     nx = formato[0]//Rx
     ny = formato[1]//Ry
@@ -90,6 +90,8 @@ def photomosaic(imagem, listaJson, Rx, Ry):
         for x in range(Rx):
             valor = getGrayMeanValue(imagem[y*ny : (y+1)*ny, x*nx : (x+1) * nx])
             imagemSub = getNearestImage(valor, listaJson)
+            dst = (shape(imagemSub)[0]//resolução, shape(imagemSub)[1]//resolução)
+            imagemSub = cv.resize(imagemSub, dst)
             if imagemProv is None:
                 imagemProv = imagemSub
                 continue
@@ -107,11 +109,12 @@ def photomosaic(imagem, listaJson, Rx, Ry):
 
 
 
-imagem = cv.imread("testes/teste3.png")
+imagemDir = "teste5.jpg"
+imagem = cv.imread("testes/" + imagemDir)
 file = open("indices.json", "r")
 objJson = json.loads(file.read())
-imagemFinal = photomosaic(imagem, objJson['imagens'], 32, 32)
-cv.imwrite("saidas/saida3.jpg", imagemFinal)
+imagemFinal = photomosaic(imagem, objJson['imagens'], 100, 100, 128)
+cv.imwrite("saidas/" + imagemDir, imagemFinal)
 
 
 '''
