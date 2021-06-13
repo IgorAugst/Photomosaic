@@ -44,16 +44,81 @@ def Converter(listaDiretorios):
 
     return imSaida
 
-def getGrayMeanValues(listaDiretorios):
+def processGrayImages(listaDiretorios):
     valores = GrupoImagens()
     for dir, file in zip(listaDiretorios, listaDiretorios):
         imagem = cv.imread("images\\" + file)
-        valorBruto = cv.mean(cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)[0])
-        valores.adicionar(Imagem(dir,valorBruto[0]))
-
+        imagemGray = cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)
+        valorBruto = cv.mean(imagemGray[0])
+        valores.adicionar(Imagem("ImageGray/" + dir,valorBruto[0]))
+        cv.imwrite("ImageGray/" + dir, cv.cvtColor(imagemGray, cv.COLOR_GRAY2BGR))
+    valores.imagens.sort(key=lambda x: x.valor, reverse=False)
     return valores
 
+def getGrayMeanValue(imagem):
+    valorBruto = cv.mean(cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)[0])
+    return valorBruto[0]
+
+def mergeImages(imagem1, imagem2, eixo):
+    return np.concatenate((imagem1, imagem2), eixo)
+
+def getNearestImage(valor, listaJson):
+    ini = 0
+    fim = len(listaJson) - 1
+    meio = 0
+
+    while ini<=fim:
+        meio = (ini + fim) // 2
+        if listaJson[meio]['valor'] == valor:
+            return cv.imread(listaJson[meio]['nome'])
+        else:
+            if valor < listaJson[meio]['valor']:
+                fim = meio - 1
+            else:
+                ini = meio + 1
+
+    return cv.imread(listaJson[meio]['nome'])
+
+def photomosaic(imagem, listaJson, Rx, Ry):
+    formato = shape(imagem)
+    nx = formato[0]//Rx
+    ny = formato[1]//Ry
+    imagemFinal = None
+
+    for y in range(Ry):
+        imagemProv = None
+        for x in range(Rx):
+            valor = getGrayMeanValue(imagem[y*ny : (y+1)*ny, x*nx : (x+1) * nx])
+            imagemSub = getNearestImage(valor, listaJson)
+            if imagemProv is None:
+                imagemProv = imagemSub
+                continue
+            else:
+                imagemProv = mergeImages(imagemProv, imagemSub, 1)
+            
+        if imagemFinal is  None:
+            imagemFinal = imagemProv
+            continue
+        else:
+            imagemFinal = mergeImages(imagemFinal, imagemProv, 0)
+
+    return imagemFinal
+
+
+
+
+imagem = cv.imread("testes/teste3.png")
+file = open("indices.json", "r")
+objJson = json.loads(file.read())
+imagemFinal = photomosaic(imagem, objJson['imagens'], 32, 32)
+cv.imwrite("saidas/saida3.jpg", imagemFinal)
+
+
+'''
 listaDir = listdir('images')
-valores = getGrayMeanValues(listaDir)
+valores = processGrayImages(listaDir)
 txtJson = json.dumps(valores)
-print(txtJson)
+file = open("indices.json", "w")
+file.write(txtJson)
+file.close()
+'''
