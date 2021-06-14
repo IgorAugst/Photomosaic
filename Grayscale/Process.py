@@ -31,8 +31,7 @@ def processGrayImages(listaDiretorios, size):
     for dir, file in zip(listaDiretorios, listaDiretorios):
         imagem = cv.imread("images\\" + file)
         imagemGray = cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)
-        imagemGray = imagemGray[0]
-        valorBruto = cv.mean(imagemGray) #adicionar [0]
+        valorBruto = cv.mean(imagemGray[0])
         valores.adicionar(Imagem("ImageGray/" + dir,valorBruto[0]))
         imagemGray = cv.cvtColor(imagemGray, cv.COLOR_GRAY2BGR)
         imagemGray = cv.resize(imagemGray, size)
