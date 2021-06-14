@@ -26,35 +26,6 @@ class GrupoImagens:
             text += f"({im.nome}, {im.valor})\n"
         return text
 
-def Converter(listaDiretorios):
-    i = 0
-    imagens = []
-    gray = []
-    for file in listaDiretorios:
-        imagens.append(cv.imread("images\\" + file))
-        gray.append(cv.cvtColor(imagens[i], cv.COLOR_BGR2GRAY))
-        gray[i] = cv.cvtColor(gray[i], cv.COLOR_GRAY2RGB)
-        i += 1
-
-    imSaida = np.concatenate((imagens.pop(0),gray.pop(0)), axis=1)
-    for original, manip in zip(imagens, gray):
-        imAux = np.concatenate((original, manip), axis=1)
-        imSaida = np.concatenate((imSaida, imAux), axis=0)
-
-
-    return imSaida
-
-def processGrayImages(listaDiretorios):
-    valores = GrupoImagens()
-    for dir, file in zip(listaDiretorios, listaDiretorios):
-        imagem = cv.imread("images\\" + file)
-        imagemGray = cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)
-        valorBruto = cv.mean(imagemGray[0])
-        valores.adicionar(Imagem("ImageGray/" + dir,valorBruto[0]))
-        cv.imwrite("ImageGray/" + dir, cv.cvtColor(imagemGray, cv.COLOR_GRAY2BGR))
-    valores.imagens.sort(key=lambda x: x.valor, reverse=False)
-    return valores
-
 def getGrayMeanValue(imagem):
     valorBruto = cv.mean(cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)[0])
     return valorBruto[0]
