@@ -79,11 +79,17 @@ def getNearestImage(valor, listaJson):
 
     return cv.imread(listaJson[meio]['nome'])
 
+def update(porcentagem):
+    print(f"{(porcentagem*100):.2f}%")
+
 def photomosaic(imagem, listaJson, Rx, Ry, resolução=1):
     formato = shape(imagem)
     nx = formato[0]//Rx
     ny = formato[1]//Ry
+    imagem = cv.resize(imagem, (nx * Rx, ny * Ry))
     imagemFinal = None
+    count = 0
+    total = Rx * Ry
 
     for y in range(Ry):
         imagemProv = None
@@ -97,6 +103,8 @@ def photomosaic(imagem, listaJson, Rx, Ry, resolução=1):
                 continue
             else:
                 imagemProv = mergeImages(imagemProv, imagemSub, 1)
+
+            count += 1
             
         if imagemFinal is  None:
             imagemFinal = imagemProv
@@ -104,24 +112,16 @@ def photomosaic(imagem, listaJson, Rx, Ry, resolução=1):
         else:
             imagemFinal = mergeImages(imagemFinal, imagemProv, 0)
 
+        update(count / total)
+
     return imagemFinal
 
 
 
 
-imagemDir = "teste5.jpg"
+imagemDir = "lenna.jpg"
 imagem = cv.imread("testes/" + imagemDir)
 file = open("indices.json", "r")
 objJson = json.loads(file.read())
-imagemFinal = photomosaic(imagem, objJson['imagens'], 100, 100, 128)
+imagemFinal = photomosaic(imagem, objJson['imagens'], 160, 160, 10)
 cv.imwrite("saidas/" + imagemDir, imagemFinal)
-
-
-'''
-listaDir = listdir('images')
-valores = processGrayImages(listaDir)
-txtJson = json.dumps(valores)
-file = open("indices.json", "w")
-file.write(txtJson)
-file.close()
-'''
