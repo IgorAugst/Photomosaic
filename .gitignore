@@ -131,4 +131,4 @@ dmypy.json
 #outros
 /images
 /ImageGray
-*.json
+indices.json
