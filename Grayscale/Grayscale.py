@@ -1,8 +1,10 @@
+import sys
 import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 import jsons as json
-from numpy.core.fromnumeric import shape
+import os
+from numpy.core.fromnumeric import shape, size
 from os import listdir
 
 class Imagem:
@@ -89,10 +91,35 @@ def photomosaic(imagem, listaJson, Rx, Ry, resolução=1):
 
 
 
+imagemDir = "testes/lenna.jpg"   #diretorio da imagem a ser processada
+imagemOut = "saidas/"            #diretorio de destino da imagem. ELE PRECISA EXISTIR
+imagemRes = 60                   #quantidade de imagens para compor a final
+imagemScale = 10                 #fator de redução das imagens individuais
 
-imagemDir = "lenna.jpg"
-imagem = cv.imread("testes/" + imagemDir)
+sizeArg = size(sys.argv)
+
+if sizeArg > 1:
+    imagemDir = sys.argv[1] 
+
+if sizeArg > 2:
+    imagemOut = sys.argv[2]  
+
+if sizeArg > 3:
+    imagemRes = int(sys.argv[3])
+
+if sizeArg > 4:
+    imagemScale = int(sys.argv[4])
+
+imagemDir = imagemDir.replace("\\", "/")
+imagemOut = imagemOut.replace("\\", "/")
+
+if imagemDir[-1] != "/":
+    imagemDir += "/"
+
+imagemOut += os.path.basename(imagemDir[:-1]) 
+
+imagem = cv.imread(imagemDir)
 file = open("indices.json", "r")
 objJson = json.loads(file.read())
-imagemFinal = photomosaic(imagem, objJson['imagens'], 160, 160, 10)
-cv.imwrite("saidas/" + imagemDir, imagemFinal)
+imagemFinal = photomosaic(imagem, objJson['imagens'], imagemRes, imagemRes, imagemScale)
+cv.imwrite(imagemOut, imagemFinal)

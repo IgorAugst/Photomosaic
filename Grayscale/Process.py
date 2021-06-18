@@ -2,8 +2,9 @@ import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 import jsons as json
-from numpy.core.fromnumeric import shape
+from numpy.core.fromnumeric import shape, size
 from os import listdir
+import sys
 
 class Imagem:
     def __init__(self, nome, valor):
@@ -26,22 +27,42 @@ class GrupoImagens:
             text += f"({im.nome}, {im.valor})\n"
         return text
 
-def processGrayImages(listaDiretorios, size):
+def processGrayImages(diretorio, dirSaida, quantidade, tamanho):
     valores = GrupoImagens()
-    for dir, file in zip(listaDiretorios, listaDiretorios):
-        imagem = cv.imread("images\\" + file)
+
+    listaDir = listdir(diretorio)
+
+    for file in listaDir:
+        imagem = cv.imread(diretorio + file)
         imagemGray = cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)
         valorBruto = cv.mean(imagemGray[0])
-        valores.adicionar(Imagem("ImageGray/" + dir,valorBruto[0]))
+        valores.adicionar(Imagem(dirSaida + file, valorBruto[0]))
         imagemGray = cv.cvtColor(imagemGray, cv.COLOR_GRAY2BGR)
-        imagemGray = cv.resize(imagemGray, size)
-        cv.imwrite("ImageGray/" + dir, imagemGray)
+        imagemGray = cv.resize(imagemGray, tamanho)
+        cv.imwrite(dirSaida + file, imagemGray)
     valores.imagens.sort(key=lambda x: x.valor, reverse=False)
     return valores
 
 
-listaDir = listdir('images')
-valores = processGrayImages(listaDir[0:80],(800,800))
+if size(sys.argv) < 3:
+    print("Digite o diretorio com as imagens e o diretorio de saida")
+    exit(1)
+
+diretorio = sys.argv[1]
+dirSaida = sys.argv[2]
+quantImage = 80
+imageSize = 800
+
+diretorio = diretorio.replace("\\", "/")
+dirSaida = dirSaida.replace("\\", "/")
+
+if diretorio[-1] != "/":
+    diretorio += "/"
+
+if dirSaida[-1] != "/":
+    dirSaida += "/"
+
+valores = processGrayImages(diretorio, dirSaida, quantImage, (imageSize, imageSize))
 txtJson = json.dumps(valores)
 file = open("indices.json", "w")
 file.write(txtJson)
