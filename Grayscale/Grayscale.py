@@ -28,9 +28,15 @@ class GrupoImagens:
             text += f"({im.nome}, {im.valor})\n"
         return text
 
-def getGrayMeanValue(imagem):
-    valorBruto = cv.mean(cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)[0])
-    return valorBruto[0]
+def getGrayMeanValue(imagem, x1, x2, y1, y2):
+    soma = 0
+
+    for x in range(x1, x2):
+        for y in range(y1, y2):
+            soma += imagem[x][y]
+
+        
+    return soma / ((x2 - x1)*(y2-y1))
 
 def mergeImages(imagem1, imagem2, eixo):
     return np.concatenate((imagem1, imagem2), eixo)
@@ -63,14 +69,16 @@ def photomosaic(imagem, listaJson, Rx, Ry, resolução=1):
     imagemFinal = None
     count = 0
     total = Rx * Ry
+    imagemPB = cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)
 
     for y in range(Ry):
         imagemProv = None
         for x in range(Rx):
-            valor = getGrayMeanValue(imagem[y*ny : (y+1)*ny, x*nx : (x+1) * nx])
+            valor = getGrayMeanValue(imagemPB, x*nx, (x+1) * nx, y*ny, (y+1)*ny)
+            valor = getGrayMeanValue(imagemPB, y*ny, (y+1)*ny, x*nx, (x+1) * nx)
             imagemSub = getNearestImage(valor, listaJson)
             dst = (shape(imagemSub)[0]//resolução, shape(imagemSub)[1]//resolução)
-            imagemSub = cv.resize(imagemSub, dst)
+            imagemSub = cv.resize(imagemSub, dst, interpolation=cv.INTER_NEAREST)
             if imagemProv is None:
                 imagemProv = imagemSub
                 continue
