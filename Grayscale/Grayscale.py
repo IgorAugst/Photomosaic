@@ -5,15 +5,17 @@ import matplotlib.pyplot as plt
 import jsons as json
 import os
 from numpy.core.fromnumeric import shape, size
-from os import listdir
+from os import X_OK, listdir
 
 class Imagem:
-    def __init__(self, nome, valor):
+    def __init__(self, nome, valor, valorH, local):
         self.nome = nome
         self.valor = valor
+        self.valorInt = valorH
+        self.diretorio = local
 
     def __str__(self):
-        return f"({self.nome}, {self.valor})"
+        return f"({self.nome}, {self.valor}, {self.valorInt}, {self.diretorio})"
 
 class GrupoImagens:
     def __init__(self):
@@ -25,7 +27,7 @@ class GrupoImagens:
     def __str__(self):
         text = ""
         for im in self.imagens:
-            text += f"({im.nome}, {im.valor})\n"
+            text += f"({im.nome}, {im.valor}, {im.valorInt}, {im.diretorio})\n"
         return text
 
 def getGrayMeanValue(imagem, x1, x2, y1, y2):
@@ -37,6 +39,19 @@ def getGrayMeanValue(imagem, x1, x2, y1, y2):
 
         
     return soma / ((x2 - x1)*(y2-y1))
+
+def getIntColor(imagem, x1, x2, y1, y2):
+    soma = [0,0,0]
+
+    for x in range(x1, x2):
+        for y in range(y1, y2):
+            soma[0] += imagem[x][y][0]
+            soma[1] += imagem[x][y][1]
+            soma[2] += imagem[x][y][2]
+
+    tamanho = (x2 - x1)*(y2-y1)
+    media = [soma[2] / tamanho, soma[1] / tamanho, soma[0] / tamanho]
+    return media
 
 def mergeImages(imagem1, imagem2, eixo):
     return np.concatenate((imagem1, imagem2), eixo)
@@ -58,10 +73,27 @@ def getNearestImage(valor, listaJson):
 
     return cv.imread(listaJson[meio]['nome'])
 
+def getNearestImageRGB(valor, listaJson):
+    count = 0
+    fim = len(listaJson) - 1
+    proximo = 0
+    menorDist = float("inf")
+    while count<=fim:
+        r = listaJson[count]['valorR'] - valor[2]
+        g = listaJson[count]['valorG'] - valor[1]
+        b = listaJson[count]['valorB'] - valor[0]
+        distancia = (r**2 + g**2 + b**2)
+        if(distancia < menorDist):
+            menorDist = distancia
+            proximo = count
+            
+        count += 1
+    return cv.imread(listaJson[proximo]['diretorio'])
+
 def update(porcentagem):
     print(f"{(porcentagem*100):.2f}%")
 
-def photomosaic(imagem, listaJson, Rx, Ry, resolução=1):
+def photomosaicCinza(imagem, listaJson, Rx, Ry, resolução=1):
     formato = shape(imagem)
     nx = formato[0]//Rx
     ny = formato[1]//Ry
@@ -74,7 +106,6 @@ def photomosaic(imagem, listaJson, Rx, Ry, resolução=1):
     for y in range(Ry):
         imagemProv = None
         for x in range(Rx):
-            valor = getGrayMeanValue(imagemPB, x*nx, (x+1) * nx, y*ny, (y+1)*ny)
             valor = getGrayMeanValue(imagemPB, y*ny, (y+1)*ny, x*nx, (x+1) * nx)
             imagemSub = getNearestImage(valor, listaJson)
             dst = (shape(imagemSub)[0]//resolução, shape(imagemSub)[1]//resolução)
@@ -97,6 +128,40 @@ def photomosaic(imagem, listaJson, Rx, Ry, resolução=1):
 
     return imagemFinal
 
+
+def photomosaicRGB(imagem, listaJson, Rx, Ry, resolução=1):
+    formato = shape(imagem)
+    nx = formato[0]//Rx
+    ny = formato[1]//Ry
+    imagem = cv.resize(imagem, (nx * Rx, ny * Ry))
+    imagemFinal = None
+    count = 0
+    total = Rx * Ry
+
+    for y in range(Ry):
+        imagemProv = None
+        for x in range(Rx):
+            valor = getIntColor(imagem, y*ny, (y+1)*ny, x*nx, (x+1) * nx)
+            imagemSub = getNearestImageRGB(valor, listaJson)
+            dst = (shape(imagemSub)[0]//resolução, shape(imagemSub)[1]//resolução)
+            imagemSub = cv.resize(imagemSub, dst, interpolation=cv.INTER_NEAREST)
+            if imagemProv is None:
+                imagemProv = imagemSub
+                continue
+            else:
+                imagemProv = mergeImages(imagemProv, imagemSub, 1)
+
+            count += 1
+            
+        if imagemFinal is  None:
+            imagemFinal = imagemProv
+            continue
+        else:
+            imagemFinal = mergeImages(imagemFinal, imagemProv, 0)
+
+        update(count / total)
+
+    return imagemFinal
 
 
 imagemDir = "testes/lenna.jpg"   #diretorio da imagem a ser processada
@@ -129,5 +194,5 @@ imagemOut += os.path.basename(imagemDir[:-1])
 imagem = cv.imread(imagemDir)
 file = open("indices.json", "r")
 objJson = json.loads(file.read())
-imagemFinal = photomosaic(imagem, objJson['imagens'], imagemRes, imagemRes, imagemScale)
+imagemFinal = photomosaicRGB(imagem, objJson['imagens'], imagemRes, imagemRes, imagemScale)
 cv.imwrite(imagemOut, imagemFinal)
