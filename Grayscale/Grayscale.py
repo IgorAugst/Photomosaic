@@ -8,14 +8,16 @@ from numpy.core.fromnumeric import shape, size
 from os import X_OK, listdir
 
 class Imagem:
-    def __init__(self, nome, valor, valorH, local):
-        self.nome = nome
+    def __init__(self, diretorioGray, valor, valorR, valorG, valorB, local):
+        self.diretorioGray = diretorioGray
         self.valor = valor
-        self.valorInt = valorH
+        self.valorR = valorR
+        self.valorG = valorG
+        self.valorB = valorB
         self.diretorio = local
 
     def __str__(self):
-        return f"({self.nome}, {self.valor}, {self.valorInt}, {self.diretorio})"
+        return f"({self.diretorioGray}, {self.valor}, {self.valorR}, {self.valorG},{self.valorB} {self.diretorio})"
 
 class GrupoImagens:
     def __init__(self):
@@ -27,7 +29,7 @@ class GrupoImagens:
     def __str__(self):
         text = ""
         for im in self.imagens:
-            text += f"({im.nome}, {im.valor}, {im.valorInt}, {im.diretorio})\n"
+            text += f"({im.diretorioGray}, {im.valor}, {im.valorR},{im.valorG},{im.valorB}, {im.diretorio})\n"
         return text
 
 def getGrayMeanValue(imagem, x1, x2, y1, y2):
@@ -64,14 +66,14 @@ def getNearestImage(valor, listaJson):
     while ini<=fim:
         meio = (ini + fim) // 2
         if listaJson[meio]['valor'] == valor:
-            return cv.imread(listaJson[meio]['nome'])
+            return cv.imread(listaJson[meio]['diretorioGray'])
         else:
             if valor < listaJson[meio]['valor']:
                 fim = meio - 1
             else:
                 ini = meio + 1
 
-    return cv.imread(listaJson[meio]['nome'])
+    return cv.imread(listaJson[meio]['diretorioGray'])
 
 def getNearestImageRGB(valor, listaJson):
     count = 0
@@ -89,6 +91,15 @@ def getNearestImageRGB(valor, listaJson):
             
         count += 1
     return cv.imread(listaJson[proximo]['diretorio'])
+
+def fixSize(imagem):
+    sh = shape(imagem)
+    if sh[0] < sh[1]:
+        imagem = cv.resize(imagem, (sh[0], sh[0]))
+    else:
+        imagem = cv.resize(imagem, (sh[1], sh[1]))
+    return imagem
+
 
 def update(porcentagem):
     print(f"{(porcentagem*100):.2f}%")
@@ -108,6 +119,7 @@ def photomosaicCinza(imagem, listaJson, Rx, Ry, resolução=1):
         for x in range(Rx):
             valor = getGrayMeanValue(imagemPB, y*ny, (y+1)*ny, x*nx, (x+1) * nx)
             imagemSub = getNearestImage(valor, listaJson)
+            imagemSub = fixSize(imagemSub)
             dst = (shape(imagemSub)[0]//resolução, shape(imagemSub)[1]//resolução)
             imagemSub = cv.resize(imagemSub, dst, interpolation=cv.INTER_NEAREST)
             if imagemProv is None:
@@ -143,6 +155,7 @@ def photomosaicRGB(imagem, listaJson, Rx, Ry, resolução=1):
         for x in range(Rx):
             valor = getIntColor(imagem, y*ny, (y+1)*ny, x*nx, (x+1) * nx)
             imagemSub = getNearestImageRGB(valor, listaJson)
+            imagemSub = fixSize(imagemSub)
             dst = (shape(imagemSub)[0]//resolução, shape(imagemSub)[1]//resolução)
             imagemSub = cv.resize(imagemSub, dst, interpolation=cv.INTER_NEAREST)
             if imagemProv is None:
@@ -194,5 +207,5 @@ imagemOut += os.path.basename(imagemDir[:-1])
 imagem = cv.imread(imagemDir)
 file = open("indices.json", "r")
 objJson = json.loads(file.read())
-imagemFinal = photomosaicRGB(imagem, objJson['imagens'], imagemRes, imagemRes, imagemScale)
+imagemFinal = photomosaicCinza(imagem, objJson['imagens'], imagemRes, imagemRes, imagemScale)
 cv.imwrite(imagemOut, imagemFinal)

@@ -8,8 +8,8 @@ from os import listdir
 import sys
 
 class Imagem:
-    def __init__(self, nome, valor, valorR, valorG, valorB, local):
-        self.nome = nome
+    def __init__(self, diretorioGray, valor, valorR, valorG, valorB, local):
+        self.diretorioGray = diretorioGray
         self.valor = valor
         self.valorR = valorR
         self.valorG = valorG
@@ -17,7 +17,7 @@ class Imagem:
         self.diretorio = local
 
     def __str__(self):
-        return f"({self.nome}, {self.valor}, {self.valorR}, {self.valorG},{self.valorB} {self.diretorio})"
+        return f"({self.diretorioGray}, {self.valor}, {self.valorR}, {self.valorG},{self.valorB} {self.diretorio})"
 
 class GrupoImagens:
     def __init__(self):
@@ -29,20 +29,22 @@ class GrupoImagens:
     def __str__(self):
         text = ""
         for im in self.imagens:
-            text += f"({im.nome}, {im.valor}, {im.valorR},{im.valorG},{im.valorB}, {im.diretorio})\n"
+            text += f"({im.diretorioGray}, {im.valor}, {im.valorR},{im.valorG},{im.valorB}, {im.diretorio})\n"
         return text
 
-def processGrayImages(diretorio, dirSaida):
+def processGrayImages(diretorio, dirSaida, tamanho):
     valores = GrupoImagens()
 
     listaDir = listdir(diretorio)
 
     for file in listaDir:
         imagem = cv.imread(diretorio + file)
+        imagem = cv.resize(imagem, (tamanho, tamanho))
+        cv.imwrite(dirSaida + "color_" + file, imagem)
         mediaBrutaRGB = cv.mean(imagem)
         imagemGray = cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)
         mediaBrutaCinza = cv.mean(imagemGray[0])
-        valores.adicionar(Imagem(dirSaida + file, mediaBrutaCinza[0], int(mediaBrutaRGB[2]), int(mediaBrutaRGB[1]), int(mediaBrutaRGB[0]), diretorio + file))
+        valores.adicionar(Imagem(dirSaida + file, mediaBrutaCinza[0], int(mediaBrutaRGB[2]), int(mediaBrutaRGB[1]), int(mediaBrutaRGB[0]), dirSaida + "color_" + file))
         imagemGray = cv.cvtColor(imagemGray, cv.COLOR_GRAY2BGR)
         cv.imwrite(dirSaida + file, imagemGray)
     valores.imagens.sort(key=lambda x: x.valor, reverse=False)
@@ -65,14 +67,8 @@ if diretorio[-1] != "/":
 if dirSaida[-1] != "/":
     dirSaida += "/"
 
-valores = processGrayImages(diretorio, dirSaida)
+valores = processGrayImages(diretorio, dirSaida, 800)
 txtJson = json.dumps(valores)
 file = open("indices.json", "w")
-file.write(txtJson)
-file.close()
-
-valores.imagens.sort(key=lambda x: x.valorInt, reverse=False)
-txtJson = json.dumps(valores)
-file = open("indicesCor.json", "w")
 file.write(txtJson)
 file.close()
