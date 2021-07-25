@@ -81,9 +81,9 @@ def getNearestImageRGB(valor, listaJson):
     proximo = 0
     menorDist = float("inf")
     while count<=fim:
-        r = listaJson[count]['valorR'] - valor[2]
+        r = listaJson[count]['valorR'] - valor[0]
         g = listaJson[count]['valorG'] - valor[1]
-        b = listaJson[count]['valorB'] - valor[0]
+        b = listaJson[count]['valorB'] - valor[2]
         distancia = (r**2 + g**2 + b**2)
         if(distancia < menorDist):
             menorDist = distancia
@@ -177,7 +177,7 @@ def photomosaicRGB(imagem, listaJson, Rx, Ry, resolução=1):
     return imagemFinal
 
 
-imagemDir = "testes/lenna.jpg"   #diretorio da imagem a ser processada
+imagemDir = "D:\igora\Downloads\Screenshot_20210318-082317.jpg"   #diretorio da imagem a ser processada
 imagemOut = "saidas/"            #diretorio de destino da imagem. ELE PRECISA EXISTIR
 imagemRes = 60                   #quantidade de imagens para compor a final
 imagemScale = 10                 #fator de redução das imagens individuais
@@ -196,6 +196,9 @@ if sizeArg > 3:
 if sizeArg > 4:
     imagemScale = int(sys.argv[4])
 
+if sizeArg > 4:
+    imagemScale = int(sys.argv[4])
+
 imagemDir = imagemDir.replace("\\", "/")
 imagemOut = imagemOut.replace("\\", "/")
 
@@ -207,5 +210,5 @@ imagemOut += os.path.basename(imagemDir[:-1])
 imagem = cv.imread(imagemDir)
 file = open("indices.json", "r")
 objJson = json.loads(file.read())
-imagemFinal = photomosaicCinza(imagem, objJson['imagens'], imagemRes, imagemRes, imagemScale)
+imagemFinal = photomosaicRGB(imagem, objJson['imagens'], imagemRes, imagemRes, imagemScale)
 cv.imwrite(imagemOut, imagemFinal)
