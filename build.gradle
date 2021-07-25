@@ -1,0 +1,16 @@
+plugins {
+  id "com.linkedin.python-cli" version "0.4.9"
+}
+
+dependencies{
+    python 'pypi:opencv-python'
+}
+
+task gerarImagens(type: Exec){
+    workingDir './src'
+    commandLine 'python.exe', 'Process.py'
+}
+
+repositories{
+    pyGradlePyPi()
+}
