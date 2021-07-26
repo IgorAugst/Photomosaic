@@ -31,7 +31,7 @@ class GrupoImagens:
             text += f"({im.valor}, {im.valorR},{im.valorG},{im.valorB}, {im.diretorio})\n"
         return text
 
-def processImages(diretorio):
+def processImages(diretorio): #percorre todas as imagens no diretorio, calcula a media em escala de cinza e a media em RGB
     valores = GrupoImagens()
 
     listaDir = listdir(diretorio)
@@ -62,7 +62,7 @@ if diretorio[-1] != "/":
     diretorio += "/"
 
 valores = processImages(diretorio)
-txtJson = json.dumps(valores)
+txtJson = json.dumps(valores)  #utiliza os valores retornados para gerar um arquivo json contendo as informaçoes das imagens
 file = open(diretorio + "indices.json", "w")
 file.write(txtJson)
 file.close()

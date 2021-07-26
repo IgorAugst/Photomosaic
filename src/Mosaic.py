@@ -31,7 +31,7 @@ class GrupoImagens:
             text += f"({im.valor}, {im.valorR},{im.valorG},{im.valorB}, {im.diretorio})\n"
         return text
 
-def getGrayMeanValue(imagem, x1, x2, y1, y2):
+def getGrayMeanValue(imagem, x1, x2, y1, y2): #calcula o valor médio em escala de cinza da imagem entre os pontos
     soma = 0
 
     for x in range(x1, x2):
@@ -41,7 +41,7 @@ def getGrayMeanValue(imagem, x1, x2, y1, y2):
         
     return soma / ((x2 - x1)*(y2-y1))
 
-def getIntColor(imagem, x1, x2, y1, y2):
+def getIntColor(imagem, x1, x2, y1, y2):    #calcula o a cor média da imagem entre os pontos
     soma = [0,0,0]
 
     for x in range(x1, x2):
@@ -54,10 +54,10 @@ def getIntColor(imagem, x1, x2, y1, y2):
     media = [soma[2] / tamanho, soma[1] / tamanho, soma[0] / tamanho]
     return media
 
-def mergeImages(imagem1, imagem2, eixo):
+def mergeImages(imagem1, imagem2, eixo):             #realiza a concatenação entre duas imagens
     return np.concatenate((imagem1, imagem2), eixo)
 
-def getNearestImage(valor, listaJson):
+def getNearestImage(valor, listaJson):               #realiza busca binaria no json, procurando o valor em cinza mais proximo
     ini = 0
     fim = len(listaJson) - 1
     meio = 0
@@ -74,7 +74,7 @@ def getNearestImage(valor, listaJson):
 
     return cv.imread(listaJson[meio]['diretorio'])
 
-def getNearestImageRGB(valor, listaJson):
+def getNearestImageRGB(valor, listaJson):           #realiza a busca no json, para encontrar a imagem com cor mais proxima
     count = 0
     fim = len(listaJson) - 1
     proximo = 0
@@ -83,7 +83,7 @@ def getNearestImageRGB(valor, listaJson):
         r = listaJson[count]['valorR'] - valor[0]
         g = listaJson[count]['valorG'] - valor[1]
         b = listaJson[count]['valorB'] - valor[2]
-        distancia = (r**2 + g**2 + b**2)
+        distancia = (r**2 + g**2 + b**2)            #utiliza a distancia entre os valores RGB para definir o mais proximo
         if(distancia < menorDist):
             menorDist = distancia
             proximo = count
@@ -91,16 +91,16 @@ def getNearestImageRGB(valor, listaJson):
         count += 1
     return cv.imread(listaJson[proximo]['diretorio'])
 
-def update(porcentagem):
+def update(porcentagem):                            #exibe o progresso do programa
     print(f"{(porcentagem*100):.2f}%")
 
-def photomosaicRGB(imagem, listaJson, Rx, Ry, resolução=800, pretoBranco = False):
+def photomosaicRGB(imagem, listaJson, Rx, Ry, resolução=800, pretoBranco = False):       #funcao que gera o mosaico
     formato = shape(imagem)
     nx = formato[0]//Rx
     ny = formato[1]//Ry
-    imagem = cv.resize(imagem, (nx * Rx, ny * Ry))
+    imagem = cv.resize(imagem, (nx * Rx, ny * Ry))      #calcula a quantidade de imagens que ira compor a imagem final, e redimensiona a original
 
-    if pretoBranco:
+    if pretoBranco:                 
         imagem = cv.cvtColor(imagem, cv.COLOR_BGR2GRAY)
 
     imagemFinal = None
@@ -109,23 +109,23 @@ def photomosaicRGB(imagem, listaJson, Rx, Ry, resolução=800, pretoBranco = Fal
 
     for y in range(Ry):
         imagemProv = None
-        for x in range(Rx):
+        for x in range(Rx):                          #percorre todos os blocos da imagem
         
             if pretoBranco:
                 valor = getGrayMeanValue(imagem, y*ny, (y+1)*ny, x*nx, (x+1) * nx)
                 imagemSub = getNearestImage(valor, listaJson)
             else:
                 valor = getIntColor(imagem, y*ny, (y+1)*ny, x*nx, (x+1) * nx)
-                imagemSub = getNearestImageRGB(valor, listaJson)
+                imagemSub = getNearestImageRGB(valor, listaJson)                  #calcula a cor media da imagem e busca a mais proxuma
 
-            imagemSub = cv.resize(imagemSub, (resolução, resolução))
+            imagemSub = cv.resize(imagemSub, (resolução, resolução))               #redimendiona a imagem para o tamanho desejado
             if pretoBranco:
                 imagemSub = cv.cvtColor(imagemSub, cv.COLOR_BGR2GRAY)
             if imagemProv is None:
                 imagemProv = imagemSub
                 continue
             else:
-                imagemProv = mergeImages(imagemProv, imagemSub, 1)
+                imagemProv = mergeImages(imagemProv, imagemSub, 1)                #concatena a imagem anterior com o proximo bloco
 
             count += 1
             
@@ -135,7 +135,7 @@ def photomosaicRGB(imagem, listaJson, Rx, Ry, resolução=800, pretoBranco = Fal
         else:
             imagemFinal = mergeImages(imagemFinal, imagemProv, 0)
 
-        update(count / total)
+        update(count / total)              #exibe na tela o progresso
 
     return imagemFinal
 
