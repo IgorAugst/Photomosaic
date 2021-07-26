@@ -35,6 +35,10 @@ def processImages(diretorio):
     valores = GrupoImagens()
 
     listaDir = listdir(diretorio)
+    try:
+        listaDir.remove("indices.json")
+    except:
+        pass 
 
     for file in listaDir:
         imagem = cv.imread(diretorio + file)
@@ -59,6 +63,6 @@ if diretorio[-1] != "/":
 
 valores = processImages(diretorio)
 txtJson = json.dumps(valores)
-file = open("indices.json", "w")
+file = open(diretorio + "indices.json", "w")
 file.write(txtJson)
 file.close()

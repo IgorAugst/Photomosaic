@@ -145,6 +145,7 @@ imagemOut = "saidas/"            #diretorio de destino da imagem. ELE PRECISA EX
 imagemRes = 60                   #quantidade de imagens para compor a final
 imagemScale = 10                 #fator de redução das imagens individuais
 pretoeBranco = False
+conjunto = "images/"
 
 sizeArg = size(sys.argv)
 
@@ -163,16 +164,22 @@ if sizeArg > 4:
 if sizeArg > 5:
     pretoeBranco = sys.argv[5] == "True"
 
+if sizeArg > 6:
+    conjunto = sys.argv[6]
+
 imagemDir = imagemDir.replace("\\", "/")
 imagemOut = imagemOut.replace("\\", "/")
 
 if imagemDir[-1] != "/":
     imagemDir += "/"
 
+if conjunto[-1] != "/":
+    conjunto += "/"
+
 imagemOut += os.path.basename(imagemDir[:-1]) 
 
 imagem = cv.imread(imagemDir)
-file = open("indices.json", "r")
+file = open(conjunto + "indices.json", "r")
 objJson = json.loads(file.read())
 imagemFinal = photomosaicRGB(imagem, objJson['imagens'], imagemRes, imagemRes, imagemScale, pretoeBranco)
 cv.imwrite(imagemOut, imagemFinal)
