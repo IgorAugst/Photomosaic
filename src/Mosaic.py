@@ -118,7 +118,7 @@ def photomosaicRGB(imagem, listaJson, Rx, Ry, resolução=800, pretoBranco = Fal
                 valor = getIntColor(imagem, y*ny, (y+1)*ny, x*nx, (x+1) * nx)
                 imagemSub = getNearestImageRGB(valor, listaJson)
 
-            imagemSub = cv.resize(imagemSub, (resolução, resolução), interpolation=cv.INTER_NEAREST)
+            imagemSub = cv.resize(imagemSub, (resolução, resolução))
             if pretoBranco:
                 imagemSub = cv.cvtColor(imagemSub, cv.COLOR_BGR2GRAY)
             if imagemProv is None:
@@ -140,10 +140,11 @@ def photomosaicRGB(imagem, listaJson, Rx, Ry, resolução=800, pretoBranco = Fal
     return imagemFinal
 
 
-imagemDir = "testes/render6.jpg"   #diretorio da imagem a ser processada
+imagemDir = "/testes/render6.jpg"   #diretorio da imagem a ser processada
 imagemOut = "saidas/"            #diretorio de destino da imagem. ELE PRECISA EXISTIR
 imagemRes = 60                   #quantidade de imagens para compor a final
 imagemScale = 10                 #fator de redução das imagens individuais
+pretoeBranco = False
 
 sizeArg = size(sys.argv)
 
@@ -159,8 +160,8 @@ if sizeArg > 3:
 if sizeArg > 4:
     imagemScale = int(sys.argv[4])
 
-if sizeArg > 4:
-    imagemScale = int(sys.argv[4])
+if sizeArg > 5:
+    pretoeBranco = sys.argv[5] == "True"
 
 imagemDir = imagemDir.replace("\\", "/")
 imagemOut = imagemOut.replace("\\", "/")
@@ -173,5 +174,5 @@ imagemOut += os.path.basename(imagemDir[:-1])
 imagem = cv.imread(imagemDir)
 file = open("indices.json", "r")
 objJson = json.loads(file.read())
-imagemFinal = photomosaicRGB(imagem, objJson['imagens'], imagemRes, imagemRes, imagemScale)
+imagemFinal = photomosaicRGB(imagem, objJson['imagens'], imagemRes, imagemRes, imagemScale, pretoeBranco)
 cv.imwrite(imagemOut, imagemFinal)
