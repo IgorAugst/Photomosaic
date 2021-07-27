@@ -5,7 +5,7 @@
     .
 .PARAMETER dir
     diretorio para o arquivo
-.PARAMETER sai
+.PARAMETER out
     diretorio de saida da imagem
 .PARAMETER res
     quantidade de imagens para compor o mosaico
@@ -23,7 +23,7 @@
 param(
     [Parameter(Mandatory=$true)]        
     [string]$dir,
-    [string]$sai = "./",
+    [string]$out = "./",
     [int]$res = 60,
     [int]$fac = 100,
     [switch]$pretoBranco = $false,
@@ -36,5 +36,5 @@ if($update){
     Write-Host("Atualizado")
 }
 
-& "python.exe" "./src/Mosaic.py" $dir $sai $res $fac $pretoBranco $imagens
+& "python.exe" "./src/Mosaic.py" $dir $out $res $fac $pretoBranco $imagens
 Write-Host "Fim"

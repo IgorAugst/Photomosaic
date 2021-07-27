@@ -8,7 +8,7 @@ from numpy.core.fromnumeric import shape, size
 from os import X_OK, listdir
 
 class Imagem:
-    def __init__(self, valor, valorR, valorG, valorB, local):
+    def __init__(self, valor, valorR, valorG, valorB, local):   #contrutor da classe Imagem
         self.valor = valor
         self.valorR = valorR
         self.valorG = valorG
@@ -19,7 +19,7 @@ class Imagem:
         return f"({self.valor}, {self.valorR}, {self.valorG},{self.valorB} {self.diretorio})"
 
 class GrupoImagens:
-    def __init__(self):
+    def __init__(self):      #contrutor da classe GrupoImagens
         self.imagens = []
         
     def adicionar(self, im):
@@ -94,8 +94,9 @@ def getNearestImageRGB(valor, listaJson):           #realiza a busca no json, pa
 def update(porcentagem):                            #exibe o progresso do programa
     print(f"{(porcentagem*100):.2f}%")
 
-def photomosaicRGB(imagem, listaJson, Rx, Ry, resolução=800, pretoBranco = False):       #funcao que gera o mosaico
+def photomosaicRGB(imagem, listaJson, Rx, resolução=800, pretoBranco = False):       #funcao que gera o mosaico
     formato = shape(imagem)
+    Ry = int(Rx*(formato[0]/formato[1]))
     nx = formato[0]//Rx
     ny = formato[1]//Ry
     imagem = cv.resize(imagem, (nx * Rx, ny * Ry))      #calcula a quantidade de imagens que ira compor a imagem final, e redimensiona a original
@@ -181,5 +182,5 @@ imagemOut += os.path.basename(imagemDir[:-1])
 imagem = cv.imread(imagemDir)
 file = open(conjunto + "indices.json", "r")
 objJson = json.loads(file.read())
-imagemFinal = photomosaicRGB(imagem, objJson['imagens'], imagemRes, imagemRes, imagemScale, pretoeBranco)
+imagemFinal = photomosaicRGB(imagem, objJson['imagens'], imagemRes, imagemScale, pretoeBranco)
 cv.imwrite(imagemOut, imagemFinal)
